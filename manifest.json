@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Auto DOT to Diagram",
+  "version": "1.0",
+  "description": "Automatically detects DOT/Graphviz code on webpages and replaces it with the rendered diagram.",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["viz.js", "full.render.js", "content.js"]
+    }
+  ],
+  "permissions": ["activeTab"]
+}
