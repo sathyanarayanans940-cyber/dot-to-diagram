@@ -1,18 +1,18 @@
-// content.js - Fixed Hiding Logic (Removes ChatGPT Wrapper completely)
+// Detect DOT blocks, render diagrams, and hide the original code containers.
 
 const viz = new Viz();
 let renderTimeout;
 const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-// 1. Helper: Check for DOT format
+// Recognize complete DOT graphs.
 function isDotCode(text) {
     if (!text) return false;
     const trimmed = text.trim();
-    // Logic: Must start with strict/digraph/graph AND end with }
+    // Accept graph/digraph declarations with an optional strict prefix.
     return /^\s*(strict\s+)?(digraph|graph)\s+[\s\S]*\}\s*$/.test(trimmed);
 }
 
-// 2. Helper: Clean SVG
+// Apply fonts and normalize the SVG background.
 function styleSVG(svg) {
     const fontStack = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
     svg.setAttribute('font-family', fontStack);
@@ -260,8 +260,8 @@ function getElementFillLuminance(element) {
 }
 
 function getTextBackdropLuminance(text) {
-    // FIX: Ignore edge groups because edge text floats over the main dark/light canvas,
-    // not over the actual line or arrowhead polygon inside the edge group.
+    // Edge labels sit over the canvas,
+    // rather than the line or arrowhead inside the edge group.
     if (text.closest("g.edge")) {
         return null; 
     }
@@ -422,7 +422,7 @@ function applySvgTheme(svg, isDark) {
     forceReadableSvgText(svg, isDark);
 }
 
-// 3. Central Logic: Apply Theme
+// Apply the current page theme.
 function applyTheme(wrapper, isDark) {
     const svg = wrapper.querySelector('svg');
     const buttons = wrapper.querySelectorAll('.dot-btn');
@@ -460,7 +460,7 @@ function applyTheme(wrapper, isDark) {
     }
 }
 
-// 4. Create Toolbar
+// Diagram controls.
 function createToolbar(container, wrapper, originalDisplay) {
     const toolbar = document.createElement('div');
     toolbar.style.position = "absolute";
@@ -517,7 +517,7 @@ function createToolbar(container, wrapper, originalDisplay) {
     return toolbar;
 }
 
-// 5. Main Processing Logic
+// Find and render DOT blocks.
 function processPage() {
     const currentSystemDark = themeQuery.matches;
     const standardBlocks = document.querySelectorAll('pre code, div.code-block code');
@@ -543,8 +543,8 @@ function tryProcessBlock(element, type, systemDark) {
             dotCode = element.innerText; 
         }
 
-        // FIND THE TRUE CONTAINER
-        // We look for the "border-token" class which represents the outer box in ChatGPT
+        // Find the surrounding code card.
+        // ChatGPT uses border-token classes for its CodeMirror card.
         const editor = element.closest('.cm-editor');
         if (editor) {
             // Walk up to find the main card wrapper
@@ -587,8 +587,8 @@ function tryProcessBlock(element, type, systemDark) {
         wrapper.appendChild(svgContainer);
         container.parentNode.insertBefore(wrapper, container.nextSibling);
         
-        // --- KEY FIX: FORCE HIDE ---
-        // We use setProperty with !important to ensure React doesn't override it
+        // Hide the original code container.
+        // Inline priority prevents React styles from showing it behind the diagram.
         container.style.setProperty('display', 'none', 'important');
 
         applyTheme(wrapper, systemDark);
